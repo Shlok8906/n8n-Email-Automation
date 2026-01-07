@@ -9,10 +9,25 @@ const app = express();
    CONFIG & MIDDLEWARE
 ========================= */
 
-// CORS (allow frontend only in prod)
+// ✅ SAFE CORS CONFIG (FIXES ERR_INVALID_CHAR)
+const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN;
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN || "*",
+    origin: (origin, callback) => {
+      // Allow Postman, server-to-server, and same-origin
+      if (!origin) return callback(null, true);
+
+      // If no frontend origin is set, allow all
+      if (!FRONTEND_ORIGIN) return callback(null, true);
+
+      // Allow only the configured frontend
+      if (origin === FRONTEND_ORIGIN) {
+        return callback(null, true);
+      }
+
+      return callback(new Error("Not allowed by CORS"));
+    },
   })
 );
 
@@ -61,7 +76,7 @@ function parseMessageText(text) {
    ROUTES
 ========================= */
 
-// Health check (useful for debugging)
+// Health check
 app.get("/health", (req, res) => {
   res.send("Backend is alive");
 });
@@ -110,12 +125,10 @@ app.post("/api/send", async (req, res) => {
     if (!response.ok) {
       const text = await response.text().catch(() => "");
       console.error("Upstream webhook error:", response.status, text);
-      return res
-        .status(502)
-        .json({ error: "Upstream webhook error" });
+      return res.status(502).json({ error: "Upstream webhook error" });
     }
 
-    // 🔑 IMPORTANT: consume response body (prevents 500 error)
+    // ✅ CRITICAL: consume response body (prevents 500 crash)
     await response.text();
 
     return res.json({ status: "sent" });
@@ -130,8 +143,11 @@ app.post("/api/send", async (req, res) => {
 ========================= */
 
 app.use((err, req, res, next) => {
-  console.error("Unhandled error:", err);
-  res.status(500).json({ error: "Internal server error" });
+  console.error("Unhandled error:", err.stack || err);
+  res.status(500).json({
+    error: "Internal server error",
+    detail: err.message,
+  });
 });
 
 /* =========================
