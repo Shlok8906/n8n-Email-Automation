@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Email Chat — Compose with natural language</title>
+
+  <!-- External CSS ONLY (no inline styles) -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+  <!-- Star background canvas -->
+  <canvas id="star-canvas"></canvas>
+
+  <!-- Main Glass Container -->
+  <main class="container" role="main" aria-labelledby="app-title">
+
+    <h1 id="app-title">Email Chat</h1>
+
+    <!-- Instruction input -->
+    <label for="message" class="sr-only">Instruction</label>
+    <textarea
+      id="message"
+      placeholder="Type: send mail to abc@gmail.com..."
+      aria-label="Email instruction"
+    ></textarea>
+
+    <button id="parse-button" type="button">
+      Parse
+    </button>
+
+    <!-- Preview Section -->
+    <section
+      id="preview"
+      class="hidden"
+      role="region"
+      aria-labelledby="preview-title"
+    >
+      <h3 id="preview-title">Preview & Edit</h3>
+
+      <input
+        id="to"
+        type="email"
+        placeholder="To"
+        aria-label="Recipient email"
+      />
+
+      <input
+        id="subject"
+        type="text"
+        placeholder="Subject"
+        aria-label="Email subject"
+      />
+
+      <textarea
+        id="body"
+        rows="5"
+        placeholder="Body"
+        aria-label="Email body"
+      ></textarea>
+
+      <button id="send-button" type="button">
+        Send Email
+      </button>
+    </section>
+
+    <!-- Status -->
+    <p id="status" class="status" hidden></p>
+
+  </main>
+
+  <!-- ================= STARFIELD SCRIPT ================= -->
+  <script>
+    const canvas = document.getElementById('star-canvas');
+    const ctx = canvas.getContext('2d');
+
+    let stars = [];
+    let mouse = { x: -1000, y: -1000 };
+
+    window.addEventListener('mousemove', e => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+    });
+
+    function resize() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+
+    function initStars() {
+      stars = [];
+      for (let i = 0; i < 800; i++) {
+        stars.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.2,
+          speed: Math.random() * 0.3 + 0.05,
+          opacity: Math.random() * 0.8 + 0.2
+        });
+      }
+    }
+
+    function animateStars() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      stars.forEach(s => {
+        s.y -= s.speed;
+        if (s.y < 0) s.y = canvas.height;
+
+        let dx = mouse.x - s.x;
+        let dy = mouse.y - s.y;
+        let dist = Math.sqrt(dx * dx + dy * dy);
+
+        let rx = s.x;
+        let ry = s.y;
+
+        if (dist < 200) {
+          let force = (200 - dist) / 200;
+          rx += dx * force * 0.25;
+          ry += dy * force * 0.25;
+        }
+
+        ctx.fillStyle = `rgba(255,255,255,${s.opacity})`;
+        ctx.beginPath();
+        ctx.arc(rx, ry, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      requestAnimationFrame(animateStars);
+    }
+
+    window.addEventListener('resize', () => {
+      resize();
+      initStars();
+    });
+
+    resize();
+    initStars();
+    animateStars();
+  </script>
+
+  <!-- ================= APP LOGIC ================= -->
+  <script>
+    const API_BASE = "http://localhost:3000/api";
+    const state = { messageId: null };
+
+    const el = {
+      message: document.getElementById("message"),
+      parse: document.getElementById("parse-button"),
+      preview: document.getElementById("preview"),
+      to: document.getElementById("to"),
+      subject: document.getElementById("subject"),
+      body: document.getElementById("body"),
+      send: document.getElementById("send-button"),
+      status: document.getElementById("status")
+    };
+
+    function setStatus(text, type = "info") {
+      el.status.textContent = text;
+      el.status.hidden = !text;
+      el.status.className = `status status-${type}`;
+    }
+
+    function isValidEmail(email) {
+      return /[^@ \t\r\n]+@[^@ \t\r\n]+\.[^@ \t\r\n]+/.test(email);
+    }
+
+    el.parse.addEventListener("click", async () => {
+      const message = el.message.value.trim();
+      if (!message) {
+        setStatus("Enter an instruction.", "error");
+        return;
+      }
+
+      el.parse.disabled = true;
+      setStatus("Parsing...", "info");
+
+      try {
+        const res = await fetch(`${API_BASE}/message`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ message })
+        });
+
+        const data = await res.json();
+        el.preview.classList.remove("hidden");
+
+        el.to.value = data.parsed?.to || "";
+        el.subject.value = data.parsed?.subject || "";
+        el.body.value = data.parsed?.body || "";
+        state.messageId = data.messageId;
+
+        setStatus("Parsed successfully.", "info");
+      } catch {
+        setStatus("Parsing failed.", "error");
+      } finally {
+        el.parse.disabled = false;
+      }
+    });
+
+    el.send.addEventListener("click", async () => {
+      if (!isValidEmail(el.to.value)) {
+        setStatus("Invalid email address.", "error");
+        return;
+      }
+
+      el.send.disabled = true;
+      el.send.textContent = "Sending...";
+      setStatus("Sending email...", "info");
+
+      try {
+        const res = await fetch(`${API_BASE}/send`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messageId: state.messageId,
+            to: el.to.value,
+            subject: el.subject.value,
+            body: el.body.value
+          })
+        });
+
+        const data = await res.json();
+        if (data.status === "sent") {
+          setStatus("Email sent!", "info");
+          setTimeout(() => {
+            el.preview.classList.add("hidden");
+            el.message.value = "";
+          }, 2000);
+        } else throw new Error();
+      } catch {
+        setStatus("Failed to send email.", "error");
+      } finally {
+        el.send.disabled = false;
+        el.send.textContent = "Send Email";
+      }
+    });
+  </script>
+
+</body>
+</html>

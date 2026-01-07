@@ -1,0 +1,276 @@
+:root {
+  --glass: rgba(18, 20, 32, 0.55);
+  --accent: #a78bfa;
+  --accent-soft: rgba(167, 139, 250, 0.25);
+  --border: rgba(255, 255, 255, 0.18);
+  --bg: #020617;
+  --text: #f9fafb;
+
+  --radius-sm: 14px;
+  --radius-lg: 32px;
+  --container-max-width: 440px;
+}
+
+/* ================= BODY ================= */
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(circle at 50% 20%, #0b0f2a, #020617 70%);
+  color: var(--text);
+
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text",
+    "SF Pro Display", Inter, system-ui, sans-serif;
+
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ================= STAR CANVAS ================= */
+#star-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* ================= CONTAINER ================= */
+.container {
+  position: relative;
+  width: 95%;
+  max-width: var(--container-max-width);
+  padding: 42px;
+  margin: 24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgb(38, 35, 82),
+      rgba(0,0,0,0.15)
+    ),
+    var(--glass);
+
+  backdrop-filter: blur(28px) saturate(180%);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+
+  box-shadow:
+    0 40px 100px rgba(0,0,0,0.65),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+
+  z-index: 1;
+}
+
+/* ================= iOS GLASS EDGE ================= */
+.container::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-lg);
+  padding: 1.5px;
+
+  background: linear-gradient(
+    145deg,
+    rgba(255, 255, 255, 0.292),
+    rgba(255,255,255,0.05),
+    rgba(255,255,255,0.25)
+  );
+
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* ================= TITLE ================= */
+h1 {
+  font-size: 34px;
+  font-weight: 800;
+  margin: 0 0 28px 0;
+
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #e5e7eb 50%,
+    #9ca3af 100%
+  );
+
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+
+  letter-spacing: -0.04em;
+  text-shadow: 0 6px 25px rgba(255, 0, 0, 0.08);
+}
+
+/* ================= SECTION LABEL ================= */
+h3 {
+  font-size: 12px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 28px 0 14px;
+  opacity: 0.9;
+}
+
+/* ================= INPUTS (iOS FIELD) ================= */
+textarea,
+input {
+  width: 100%;
+  box-sizing: border-box;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.08),
+      rgba(0,0,0,0.45)
+    );
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  border: 1px solid rgba(255,255,255,0.22);
+  border-radius: var(--radius-sm);
+
+  padding: 16px 18px;
+  margin-bottom: 18px;
+
+  color: #ffffff;
+  font-size: 15px;
+  line-height: 1.6;
+  letter-spacing: 0.015em;
+
+  font-family: inherit;
+
+  box-shadow:
+    inset 0 1px 1px rgba(255,255,255,0.12),
+    inset 0 -1px 2px rgba(0,0,0,0.4);
+
+  transition: all 0.25s ease;
+}
+
+textarea {
+  resize: none;
+}
+
+/* ================= PLACEHOLDER ================= */
+textarea::placeholder,
+input::placeholder {
+  color: rgba(255,255,255,0.45);
+}
+
+/* ================= FOCUS (iOS GLOW) ================= */
+textarea:focus,
+input:focus {
+  outline: none;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,0.14),
+      rgba(0,0,0,0.5)
+    );
+
+  border-color: var(--accent);
+  box-shadow:
+    0 0 0 3px var(--accent-soft),
+    inset 0 1px 2px rgba(255,255,255,0.15);
+}
+
+/* ================= BUTTON (iOS PRIMARY) ================= */
+button {
+  width: 100%;
+  padding: 18px;
+
+  border: none;
+  border-radius: var(--radius-sm);
+
+  background: linear-gradient(
+    180deg,
+    #ffffff,
+    #e5e7eb
+  );
+
+  color: #000000;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 10px 30px rgba(255,255,255,0.15),
+    inset 0 -1px 0 rgba(0,0,0,0.15);
+
+  transition: all 0.2s ease;
+}
+
+button:hover:not(:disabled) {
+  background: linear-gradient(
+    180deg,
+    var(--accent),
+    #8b5cf6
+  );
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 16px 40px rgba(167,139,250,0.35);
+}
+
+button:active {
+  transform: scale(0.97);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ================= STATUS ================= */
+.status {
+  margin-top: 20px;
+  font-size: 13px;
+  padding: 12px;
+  border-radius: var(--radius-sm);
+  text-align: center;
+  letter-spacing: 0.02em;
+}
+
+.status-info {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--accent);
+}
+
+.status-error {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+/* ================= UTIL ================= */
+.hidden { display: none; }
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+}
+
+/* ================= RESPONSIVE ================= */
+@media (max-width: 480px) {
+  .container {
+    padding: 26px;
+    border-radius: 26px;
+  }
+}
