@@ -21,7 +21,7 @@ app.use((req, res, next) => {
   next();
 });
 
-const N8N_WEBHOOK = process.env.N8N_WEBHOOK || "http://localhost:5678/webhook-test/mcp-email";
+const N8N_WEBHOOK = process.env.N8N_WEBHOOK || "http://localhost:5678/webhook/mcp-email";
 
 
 function parseMessageText(text) {
