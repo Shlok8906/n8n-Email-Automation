@@ -44,7 +44,7 @@ app.use((req, res, next) => {
 // Environment variables
 const N8N_WEBHOOK =
   process.env.N8N_WEBHOOK ||
-  "http://localhost:5678/webhook/mcp-email";
+  "https://primary-production-5b62e.up.railway.app/webhook/mcp-email";
 
 /* =========================
    HELPERS
